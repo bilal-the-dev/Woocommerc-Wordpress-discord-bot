@@ -1,9 +1,24 @@
+const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 const { Client, IntentsBitField, Partials } = require("discord.js");
 const WOK = require("wokcommands");
-const { DefaultCommands } = WOK;
-const path = require("path");
 const dotenv = require("dotenv");
-dotenv.config({ path: "./.env" });
+const path = require("path");
+
+const { DefaultCommands } = WOK;
+dotenv.config({ path: `${__dirname}/.env` });
+
+const { isSendingBuyProductEmbed } = require("./config.json");
+const { sendBuyProductEmbed } = require("./utils/sendMessage");
+
+const { TOKEN, STORE_URL, CONSUMER_KEY, CONSUMER_SECRET } = process.env;
+
+// create a woocommerce api client
+const WooCommerce = new WooCommerceRestApi({
+	url: STORE_URL,
+	consumerKey: CONSUMER_KEY,
+	consumerSecret: CONSUMER_SECRET,
+	version: "wc/v3",
+});
 
 const client = new Client({
 	intents: [
@@ -15,8 +30,10 @@ const client = new Client({
 	partials: [Partials.Channel],
 });
 
-client.on("ready", async () => {
-	console.log(`${client.user.username} is running 🧶`);
+client.on("ready", async (readyClient) => {
+	console.log(`${readyClient.user.username} is running 🧶`);
+
+	if (isSendingBuyProductEmbed) await sendBuyProductEmbed(readyClient);
 
 	new WOK({
 		client,
@@ -39,4 +56,7 @@ client.on("ready", async () => {
 		},
 	});
 });
-client.login(process.env.TOKEN);
+
+client.login(TOKEN);
+
+module.exports = WooCommerce;
