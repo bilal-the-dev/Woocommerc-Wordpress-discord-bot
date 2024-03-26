@@ -1,12 +1,9 @@
-const { fetchCategories } = require("../../../utils/WooCommerce");
+const { ModalBuilder, PermissionFlagsBits } = require("discord.js");
 const {
-	generateGeneralButton,
-	generateActionRow,
-} = require("../../../utils/buttons");
-const { handleInteractionError } = require("../../../utils/errorHandler");
-const {
-	replyOrFollowInteraction,
-} = require("../../../utils/interactionHandler");
+	handleInteractionError,
+	AppError,
+} = require("../../../utils/errorHandler");
+const { createModalFields } = require("../../../utils/modals");
 
 module.exports = async (interaction) => {
 	try {
@@ -14,37 +11,20 @@ module.exports = async (interaction) => {
 
 		if (interaction.customId !== "editOrder") return;
 
-		await interaction.deferReply({ ephemeral: true });
+		if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
+			throw new AppError("Admin only");
 
-		const response = await fetchCategories();
+		const questions = {
+			"Items Availability": ["Are items available?"],
+			Discount: ["Discount"],
+			"Additional Notes": ["Any heads up for the buyer?", "Paragraph"],
+		};
 
-		// console.log(response);
-		console.log(`Fetched ${response.data.length} categories.`);
-		let buttons = [];
+		const modal = new ModalBuilder()
+			.setCustomId(`orderStatus_${interaction.message.url}`)
+			.setTitle("Data to be sent to buyer");
 
-		const rows = [];
-
-		for (const [i, product] of response.data.entries()) {
-			buttons.push(
-				generateGeneralButton(
-					product.name.replace(/&amp;/g, "&"),
-					`category_${product.id}`,
-					"Secondary",
-				),
-			);
-
-			if (buttons.length !== 5 && i !== response.data.length - 1) continue;
-			rows.push(generateActionRow(buttons));
-			buttons = [];
-		}
-
-		// console.log(rows);
-		await replyOrFollowInteraction(interaction, {
-			content:
-				"Please select among which category you want to buy the product from.",
-			components: [...rows],
-			ephemeral: true,
-		});
+		await interaction.showModal(createModalFields(modal, questions));
 	} catch (error) {
 		await handleInteractionError(error, interaction);
 	}

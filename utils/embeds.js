@@ -20,11 +20,10 @@ const generateGeneralEmbed = function ({
 	image && embed.setImage(image);
 	timestamp && embed.setTimestamp();
 	footer && embed.setFooter(footer);
-
 	return embed;
 };
 
-const generateProductEmbed = function (product) {
+const generateProductEmbed = function (product, pageNo) {
 	const {
 		name,
 		permalink,
@@ -38,19 +37,25 @@ const generateProductEmbed = function (product) {
 		images,
 	} = product;
 
-	// console.log(product);
+	const info = description
+		? `**Description:** ${description
+				.replace(/<p>/g, "")
+				.replace(/<\/p>/g, "")
+				.replace(/\n/g, "")}\n`
+		: "";
 
-	const embedDescription = `**Info:**${description}\n**Sales**:${total_sales}\n**Stock:**${
+	const embedDescription = `${info}**Sales**: ${total_sales}\n**Stock:** ${
 		stock_quantity ?? 0
-	}\n**Price:**${
-		regular_price > price ? strikethrough(regular_price) + price : price
-	}\n**Reviews:**${rating_count}`;
+	}\n**Price:** ${
+		regular_price > price ? `${strikethrough(regular_price)} ` + price : price
+	} د. إ\n**Average Rating:** ⭐ ${average_rating} \n**Reviews:** ⭐ ${rating_count}`;
 
 	return generateGeneralEmbed({
 		title: name,
 		url: permalink,
 		description: embedDescription,
 		image: images[0].src,
+		footer: { text: `Page ${pageNo}` },
 	});
 };
 

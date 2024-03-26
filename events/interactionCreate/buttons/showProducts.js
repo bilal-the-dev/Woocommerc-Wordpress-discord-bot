@@ -21,9 +21,16 @@ module.exports = async (interaction) => {
 		if (type !== "category") return;
 
 		// await interaction.deferReply({ ephemeral: true });
-		await interaction.deferUpdate();
+
+		await interaction.update({
+			content: "Fetching the products!",
+			components: [],
+			ephemeral: true,
+		});
 
 		const response = await fetchAllProducts(categoryId);
+
+		console.log(`Fetched ${response.data.length} products`);
 
 		if (response.data.length === 0)
 			throw new AppError("No product found for the category");
@@ -31,8 +38,8 @@ module.exports = async (interaction) => {
 		let curPage = 0;
 		const lastPage = response.data.length - 1;
 
-		const embeds = response.data.map((product) =>
-			generateProductEmbed(product),
+		const embeds = response.data.map((product, i) =>
+			generateProductEmbed(product, `${i + 1}/${lastPage + 1}`),
 		);
 
 		const message = await replyButtonPagination(interaction);
@@ -64,6 +71,7 @@ module.exports = async (interaction) => {
 				components: [
 					generateNextPrevButtons(curPage, lastPage, response.data[curPage].id),
 				],
+				ephemeral: true,
 			});
 		}
 	} catch (error) {

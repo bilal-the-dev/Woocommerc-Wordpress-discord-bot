@@ -9,6 +9,7 @@ const {
 	generateGeneralButton,
 	generateActionRow,
 } = require("../../../utils/buttons");
+const { convertFieldMapToStr } = require("../../../utils/modals");
 
 module.exports = async (interaction) => {
 	try {
@@ -28,8 +29,8 @@ module.exports = async (interaction) => {
 		await interaction.update({
 			content:
 				"Your Order has been noted. You will receive a direct message from the bot regarding further information.Please turn on your DM(s).",
-			// embeds: [],
-			// components: [],
+			embeds: [],
+			components: [],
 		});
 
 		const respone = await fetchOneProduct(productId);
@@ -40,19 +41,18 @@ module.exports = async (interaction) => {
 		const { data: product } = respone;
 		if (product.length === 0) throw new AppError("Product not found");
 
-		const submittedData = fields.reduce(
-			(acc, cur) => (acc = acc + `**${cur.customId}:** ${cur.value}\n`),
-			"",
-		);
-
-		const description = `**User:** ${user}\n**Product:** [${product.name}](${product.permalink})\n${submittedData}`;
+		const description = `**User:** ${user}\n**Product:** [${product.name}](${
+			product.permalink
+		})\n${convertFieldMapToStr(fields)}**Total Cost:** ${
+			product.price * parseFloat(fields.get("Quantity").value)
+		} د. إ`;
 
 		const embedData = {
 			title: "Order Received 📥",
 			description,
 			thumbnail: user.displayAvatarURL(),
 			image: product.images[0].src,
-			footer: { text: user.id },
+			footer: { text: `${user.id}` },
 		};
 
 		const embed = generateGeneralEmbed(embedData);

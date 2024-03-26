@@ -1,10 +1,6 @@
-const {
-	ModalBuilder,
-	TextInputStyle,
-	TextInputBuilder,
-} = require("discord.js");
+const { ModalBuilder } = require("discord.js");
 const { handleInteractionError } = require("../../../utils/errorHandler");
-const { generateActionRow } = require("../../../utils/buttons");
+const { createModalFields } = require("../../../utils/modals");
 
 module.exports = async (interaction) => {
 	try {
@@ -16,43 +12,21 @@ module.exports = async (interaction) => {
 
 		if (type !== "buy") return;
 
+		const questions = {
+			Email: ["What's your email address?"],
+			Quantity: ["The quantity of the product you want to buy?"],
+			"Additional Info": [
+				"Any info about product (size,color,weight)",
+				"paragraph",
+			],
+			Address: ["Shipping address (zip code,country,location)"],
+		};
+
 		const modal = new ModalBuilder()
 			.setCustomId(customId)
 			.setTitle("Personal Information");
 
-		const country = new TextInputBuilder()
-			.setCustomId("Email")
-			.setLabel("What's your email address?")
-			.setStyle(TextInputStyle.Short);
-
-		const quantity = new TextInputBuilder()
-			.setCustomId("Quantity")
-			.setLabel("The quantity of the product you want to buy?")
-			.setStyle(TextInputStyle.Short);
-
-		const info = new TextInputBuilder()
-			.setCustomId("Additional Info")
-			.setLabel("Any info about product (size,color,weight)")
-			.setStyle(TextInputStyle.Short);
-
-		const address = new TextInputBuilder()
-			.setCustomId("Address")
-			.setLabel("Shipping address (zip code,country,location)")
-			.setStyle(TextInputStyle.Short);
-
-		const firstActionRow = generateActionRow([country]);
-		const secondActionRow = generateActionRow([quantity]);
-		const thirdActionRow = generateActionRow([info]);
-		const fourthActionRow = generateActionRow([address]);
-
-		modal.addComponents(
-			firstActionRow,
-			secondActionRow,
-			thirdActionRow,
-			fourthActionRow,
-		);
-
-		await interaction.showModal(modal);
+		await interaction.showModal(createModalFields(modal, questions));
 	} catch (error) {
 		await handleInteractionError(error, interaction);
 	}

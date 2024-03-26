@@ -1,4 +1,3 @@
-const { fetchCategories } = require("../../../utils/WooCommerce");
 const {
 	generateGeneralButton,
 	generateActionRow,
@@ -7,6 +6,7 @@ const { handleInteractionError } = require("../../../utils/errorHandler");
 const {
 	replyOrFollowInteraction,
 } = require("../../../utils/interactionHandler");
+const { categories } = require("./../../../config.json");
 
 module.exports = async (interaction) => {
 	try {
@@ -14,26 +14,17 @@ module.exports = async (interaction) => {
 
 		if (interaction.customId !== "showCategory") return;
 
-		await interaction.deferReply({ ephemeral: true });
+		// await interaction.deferReply({ ephemeral: true });
 
-		const response = await fetchCategories();
-
-		// console.log(response);
-		console.log(`Fetched ${response.data.length} categories.`);
+		const categoriesArray = Object.entries(categories);
 		let buttons = [];
 
 		const rows = [];
 
-		for (const [i, product] of response.data.entries()) {
-			buttons.push(
-				generateGeneralButton(
-					product.name.replace(/&amp;/g, "&"),
-					`category_${product.id}`,
-					"Secondary",
-				),
-			);
+		for (const [i, [name, id]] of categoriesArray.entries()) {
+			buttons.push(generateGeneralButton(name, `category_${id}`, "Secondary"));
 
-			if (buttons.length !== 5 && i !== response.data.length - 1) continue;
+			if (buttons.length !== 3 && i !== categoriesArray.length - 1) continue;
 			rows.push(generateActionRow(buttons));
 			buttons = [];
 		}
